@@ -3,6 +3,8 @@ import { run, VERSION } from "../src/router.js";
 import { commands } from "../src/commands/index.js";
 
 const COMMAND_NAMES = ["init", "build", "run", "guard", "validate", "doctor", "report"];
+// init and validate landed in Phase 1; the rest are still stubs.
+const STUB_COMMANDS = ["build", "run", "guard", "doctor", "report"];
 
 describe("router", () => {
   beforeEach(() => {
@@ -36,7 +38,7 @@ describe("router", () => {
     expect(Object.keys(commands).sort()).toEqual([...COMMAND_NAMES].sort());
   });
 
-  it.each(COMMAND_NAMES)("dispatches '%s' to a stub that exits non-zero", async (name) => {
+  it.each(STUB_COMMANDS)("dispatches '%s' to a stub that exits non-zero", async (name) => {
     const code = await run([name]);
     expect(code).toBe(2);
   });

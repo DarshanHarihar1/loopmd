@@ -8,8 +8,25 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 0 (project foundation). The CLI surface is scaffolded; each command is a stub that lands
-in its own phase.
+Phase 1 (schema, parser & Loop IR). `LOOP.md` parses to a validated, tool-agnostic Loop IR,
+and the `init` and `validate` commands work end-to-end. The remaining commands (`build`, `run`,
+`guard`, `doctor`, `report`) are stubs that land in their own phases.
+
+## LOOP.md
+
+A `LOOP.md` has YAML frontmatter (machine fields) plus five markdown sections — `## Goal`,
+`## Stop when`, `## Verify with`, `## Escalate to me if`, and an optional `## Context`. These
+map to the [Loop IR](./design/loopmd-tech-spec.md) every adapter compiles from. Scaffold one
+with `loopmd init` and check it with `loopmd validate`.
+
+```sh
+loopmd init                 # write a starter ./LOOP.md (--name, --agent, --force)
+loopmd validate [file]      # schema + feasibility check, with located diagnostics
+loopmd validate --force     # allow a loop with no token/iteration budget ceiling
+```
+
+A loop with no `budget.tokens` or `budget.iterations` fails `validate` unless `--force` is
+passed — every emitted loop must carry a budget ceiling.
 
 ## Development
 
