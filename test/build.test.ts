@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build } from "../src/commands/build.js";
+import { claudeArgs } from "../src/commands/run.js";
+import { runGuardCli } from "../src/guard/cli.js";
 import { claudeCodeAdapter } from "../src/adapter/claude-code.js";
 import { parseLoop } from "../src/parser/parse.js";
 
@@ -277,5 +279,102 @@ describe("workflow scheduler", () => {
     expect(wf.content).toContain("ANTHROPIC_API_KEY");
     expect(wf.content).toContain("npx loopmd run nightly-ci-triage");
     expect(wf.content).toContain("--tokens 150000");
+  });
+});
+
+describe("run command — claude invocation", () => {
+  it("carries --tokens <budget.tokens> and --isolation worktree", () => {
+    const { ir } = parseLoop(FIXTURE);
+    const args = claudeArgs(ir!);
+    expect(args).toEqual([
+      "-p",
+      "/goal All tests in `test/` pass and lint is clean.",
+      "--tokens",
+      "150000",
+      "--isolation",
+      "worktree",
+    ]);
+  });
+
+  it("--tokens override replaces the budget ceiling for the run", () => {
+    const { ir } = parseLoop(FIXTURE);
+    expect(claudeArgs(ir!, "5000")).toContain("5000");
+  });
+
+  it("omits --isolation when isolation is inplace", () => {
+    const inplace = FIXTURE.replace("isolation: worktree", "isolation: inplace");
+    const { ir } = parseLoop(inplace);
+    expect(claudeArgs(ir!)).not.toContain("--isolation");
+  });
+});
+
+describe("build → guard integration", () => {
+  let dir: string;
+  let home: string;
+
+  // A minimal loop whose verifier passes, so the Guard reaches DONE without needing `claude`.
+  const PASSING_LOOP = [
+    "---",
+    "name: nightly-ci-triage",
+    "version: 1",
+    "agent: claude-code",
+    'schedule: "0 2 * * *"',
+    "budget:",
+    "  tokens: 150000",
+    "isolation: worktree",
+    "---",
+    "",
+    "## Goal",
+    "Keep the build green.",
+    "",
+    "## Stop when",
+    "All checks pass.",
+    "",
+    "## Verify with",
+    '- run: node -e "process.exit(0)"',
+    "",
+  ].join("\n");
+
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    dir = tempRepo();
+    home = mkdtempSync(join(tmpdir(), "loopmd-home-"));
+    process.env.LOOPMD_HOME = home;
+    setupRepo(dir, PASSING_LOOP);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env.LOOPMD_HOME;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it("build then guard appends a valid RunRecord", async () => {
+    const orig = process.cwd();
+    process.chdir(dir);
+    try {
+      expect(await build([])).toBe(0);
+      // The compiled config the Guard reads is written by build.
+      expect(existsSync(join(dir, "loopmd/nightly-ci-triage.loop.json"))).toBe(true);
+      // Run the Guard against the freshly built config.
+      const code = await runGuardCli(["--loop", "nightly-ci-triage", "--cwd", dir]);
+      expect(code).toBe(0);
+    } finally {
+      process.chdir(orig);
+    }
+
+    const recordFile = join(home, "records", "nightly-ci-triage.jsonl");
+    expect(existsSync(recordFile)).toBe(true);
+    const record = JSON.parse(readFileSync(recordFile, "utf8").trim());
+    expect(record).toMatchObject({
+      loop: "nightly-ci-triage",
+      target: "claude-code",
+      outcome: "done",
+      needsHuman: false,
+    });
+    expect(Array.isArray(record.verifiers)).toBe(true);
+    expect(record.verifiers[0]).toMatchObject({ passed: true });
   });
 });

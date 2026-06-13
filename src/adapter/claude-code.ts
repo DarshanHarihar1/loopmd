@@ -117,10 +117,3 @@ function emitLoopJson(ir: LoopIR): EmittedFile {
     content: JSON.stringify(ir, null, 2) + "\n",
   };
 }
-
-// Build the human-readable run command used both in the scheduler output and by `loopmd run`.
-export function buildRunCmd(ir: LoopIR): string {
-  const tokenFlag = ir.budget.tokens !== undefined ? ` --tokens ${ir.budget.tokens}` : "";
-  const isolationFlag = ir.isolation === "worktree" ? " --isolation worktree" : "";
-  return `claude -p "/goal ${ir.stopCondition}"${tokenFlag}${isolationFlag}`;
-}

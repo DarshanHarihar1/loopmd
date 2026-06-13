@@ -4,6 +4,7 @@
 
 import { spawnSync } from "node:child_process";
 import type { Command } from "./types.js";
+import type { LoopIR } from "../ir/types.js";
 import { loadLoopConfig } from "../guard/config.js";
 
 const HELP = `loopmd run <name> — manually trigger a loop
@@ -34,15 +35,19 @@ export const run: Command = (argv) => {
   }
 
   const tokenOverride = flagValue(argv, "--tokens");
-  const tokens = tokenOverride !== undefined ? Number(tokenOverride) : ir.budget.tokens;
+  const result = spawnSync("claude", claudeArgs(ir, tokenOverride), { stdio: "inherit" });
+  return result.status ?? 0;
+};
 
+// The `claude -p` argument vector for a loop: the goal prompt, the token ceiling
+// (overridable per run), and worktree isolation when requested (§3.4.1).
+export function claudeArgs(ir: LoopIR, tokenOverride?: string): string[] {
+  const tokens = tokenOverride !== undefined ? Number(tokenOverride) : ir.budget.tokens;
   const args = ["-p", `/goal ${ir.stopCondition}`];
   if (tokens !== undefined) args.push("--tokens", String(tokens));
   if (ir.isolation === "worktree") args.push("--isolation", "worktree");
-
-  const result = spawnSync("claude", args, { stdio: "inherit" });
-  return result.status ?? 0;
-};
+  return args;
+}
 
 function flagValue(argv: string[], flag: string): string | undefined {
   const i = argv.indexOf(flag);
