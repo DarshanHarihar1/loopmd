@@ -1,6 +1,7 @@
 import { commands } from "./commands/index.js";
 
-export const VERSION = "0.0.0";
+// Injected from package.json at build time (see tsup.config.ts); falls back when unbundled.
+export const VERSION = process.env.LOOPMD_VERSION ?? "0.0.0";
 
 const USAGE = `loopmd — compile LOOP.md into native agent-loop wiring
 

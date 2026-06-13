@@ -27,7 +27,7 @@ export function slackChannel(notifyChannel: string | undefined): string | undefi
 }
 
 export function renderSlack(records: RunRecord[], opts: SlackOptions): SlackPayload {
-  const totalTokens = records.reduce((s, r) => s + r.tokens.total, 0);
+  const totalTokens = records.reduce((s, r) => s + (r.tokens?.total ?? 0), 0);
   const totalCost = records.reduce((s, r) => s + (r.costUsd ?? 0), 0);
   const needsHuman = records.filter((r) => r.needsHuman);
 
