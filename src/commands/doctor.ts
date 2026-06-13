@@ -1,20 +1,25 @@
-// loopmd doctor — environment diagnostics (design §3.6).
-// Phase 5 ships the stub-level Codex checks: warn that Automations are registered
-// in-app and may be skipped if the machine sleeps (§3.4.2). The full tool-version /
-// `/goal` availability / credential-scoping checks land in Phase 6.
+// loopmd doctor — environment diagnostics (design §3.6, §3.4.2).
+// Checks tool versions, /goal availability, Codex Automation registration,
+// machine-sleep, and credential scoping; exit code reflects the worst severity.
 
-import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import type { Command } from "./types.js";
+import {
+  runChecks,
+  worstSeverity,
+  exitCodeFor,
+  type DoctorEnv,
+  type Severity,
+} from "../doctor/checks.js";
 
 const HELP = `loopmd doctor — environment diagnostics
 
 Usage: loopmd doctor
 
-Phase 5: warns about Codex Automation registration and machine-sleep.
-Full checks (tool versions, /goal availability, credentials) land in Phase 6.`;
+Checks tool versions, /goal availability, Codex Automation registration,
+machine-sleep, and credential scoping. Exit codes: 0 ok · 1 warnings · 2 failures.`;
 
-const SUFFIX = ".codex-automation.json";
+const SYMBOL: Record<Severity, string> = { ok: "✓", warn: "⚠", fail: "✗" };
 
 export const doctor: Command = (argv) => {
   if (argv.includes("-h") || argv.includes("--help")) {
@@ -22,27 +27,32 @@ export const doctor: Command = (argv) => {
     return 0;
   }
 
-  console.log("loopmd doctor\n");
+  const env: DoctorEnv = {
+    cwd: process.cwd(),
+    env: process.env,
+    versionOf,
+  };
 
-  const codexLoops = findCodexLoops(process.cwd());
-  if (codexLoops.length === 0) {
-    console.log("No Codex loops found. (Full environment checks land in Phase 6.)");
-    return 0;
+  const checks = runChecks(env);
+
+  console.log("loopmd doctor\n");
+  for (const c of checks) {
+    console.log(`  ${SYMBOL[c.status]} ${c.name}: ${c.message}`);
   }
 
-  console.log(`Codex loops detected: ${codexLoops.join(", ")}`);
-  console.log("  ⚠ Codex Automations must be registered in the Codex app — loopmd cannot");
-  console.log("    create them. Re-run `loopmd build` to (re)generate the descriptor.");
-  console.log("  ⚠ Automations may run on this machine; if it sleeps, scheduled runs are skipped.");
-  console.log("\n(Full environment checks land in Phase 6.)");
-  return 0;
+  const worst = worstSeverity(checks);
+  console.log(`\noverall: ${worst}`);
+  return exitCodeFor(worst);
 };
 
-function findCodexLoops(cwd: string): string[] {
-  const dir = join(cwd, "loopmd");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => f.endsWith(SUFFIX))
-    .map((f) => f.slice(0, -SUFFIX.length))
-    .sort();
+// Return a CLI's version string, or null when it is not installed.
+function versionOf(cmd: string): string | null {
+  try {
+    return execFileSync(cmd, ["--version"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return null;
+  }
 }

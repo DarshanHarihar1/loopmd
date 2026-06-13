@@ -6,7 +6,6 @@ import { codexAdapter, codexSetupInstructions } from "../src/adapter/codex.js";
 import { claudeCodeAdapter } from "../src/adapter/claude-code.js";
 import { adapters } from "../src/adapter/index.js";
 import { build } from "../src/commands/build.js";
-import { doctor } from "../src/commands/doctor.js";
 import { parseLoop } from "../src/parser/parse.js";
 import { runGuard } from "../src/guard/guard.js";
 import { readRecords } from "../src/guard/record.js";
@@ -270,53 +269,5 @@ describe("report renders Codex runs from Guard records", () => {
     const out = renderReport([rec], new Map(), { since: "24h" });
     expect(out).toContain("codex-loop");
     expect(out).toContain("done");
-  });
-});
-
-// doctor (stub-level) — Codex warnings.
-describe("loopmd doctor — Codex warnings", () => {
-  let dir: string;
-  let logs: string[];
-  let realLog: typeof console.log;
-
-  beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "loopmd-doc-"));
-    logs = [];
-    realLog = console.log;
-    console.log = (s: string) => void logs.push(s);
-  });
-  afterEach(() => {
-    console.log = realLog;
-    rmSync(dir, { recursive: true, force: true });
-  });
-
-  it("warns about in-app registration and machine-sleep for Codex loops", async () => {
-    writeFileSync(join(dir, "LOOP.md"), CODEX_FIXTURE, "utf8");
-    const orig = process.cwd();
-    process.chdir(dir);
-    try {
-      await build([]);
-      logs.length = 0; // ignore build output
-      const code = await doctor([]);
-      expect(code).toBe(0);
-    } finally {
-      process.chdir(orig);
-    }
-    const text = logs.join("\n");
-    expect(text).toContain("Codex loops detected: nightly-ci-triage");
-    expect(text).toContain("registered in the Codex app");
-    expect(text).toMatch(/sleeps/);
-  });
-
-  it("reports no Codex loops in a repo without any", async () => {
-    const orig = process.cwd();
-    process.chdir(dir);
-    try {
-      const code = await doctor([]);
-      expect(code).toBe(0);
-    } finally {
-      process.chdir(orig);
-    }
-    expect(logs.join("\n")).toContain("No Codex loops found");
   });
 });
