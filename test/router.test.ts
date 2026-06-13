@@ -3,9 +3,9 @@ import { run, VERSION } from "../src/router.js";
 import { commands } from "../src/commands/index.js";
 
 const COMMAND_NAMES = ["init", "build", "run", "guard", "validate", "doctor", "report"];
-// init/validate (Phase 1), build/run (Phase 3), report (Phase 4) are implemented.
-// doctor is the last stub; guard exits 2 with no --loop, so it also lands here.
-const STUB_COMMANDS = ["guard", "doctor"];
+// init/validate (Phase 1), build/run (Phase 3), report (Phase 4), doctor (Phase 5)
+// are implemented. guard exits 2 with no --loop, so it lands in the non-zero group.
+const STUB_COMMANDS = ["guard"];
 
 describe("router", () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe("router", () => {
   });
 
   // Every MVP command must answer --help with exit 0 (Phase 4 CLI ergonomics).
-  const MVP_COMMANDS = ["init", "build", "run", "guard", "validate", "report"];
+  const MVP_COMMANDS = ["init", "build", "run", "guard", "validate", "doctor", "report"];
   it.each(MVP_COMMANDS)("'%s --help' prints help and exits 0", async (name) => {
     expect(await run([name, "--help"])).toBe(0);
   });

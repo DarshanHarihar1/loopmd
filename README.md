@@ -8,11 +8,12 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 4 (the MVP). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
-compiles it into native Claude Code artifacts; the **Guard** verifies, budgets, detects
-stalls, escalates, records, and decides during a run; and `report` renders a terminal brief
-from those records. `run` triggers a loop now (also called by the generated scheduler).
-`doctor` is the last stub (lands in Phase 6).
+Phase 5 (Codex adapter). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
+compiles it into native artifacts for **Claude Code** and/or **Codex** (one spec, two targets);
+the **Guard** verifies, budgets, detects stalls, escalates, records, and decides during a run —
+identically across both targets; and `report` renders a terminal brief from those records.
+`run` triggers a loop now (also called by the generated scheduler). `doctor` ships stub-level
+Codex warnings; its full environment checks land in Phase 6.
 
 ## The Guard
 
@@ -52,9 +53,12 @@ passed — every emitted loop must carry a budget ceiling.
 
 ## Build, run & report
 
-`build` compiles `LOOP.md` into Claude Code's native artifacts (command, Stop hook, a
-generated scheduler, a `CLAUDE.md` context block, and the Guard's `loopmd/<name>.loop.json`).
-It is idempotent, prints a plan before writing, and detects drift via `loopmd/generated.lock`.
+`build` compiles `LOOP.md` into each target's native artifacts. For **Claude Code**: a command,
+a Stop hook, a generated scheduler, and a `CLAUDE.md` context block. For **Codex**: a skill
+ending in a `loopmd guard` step (Codex has no hooks), a `*.codex-automation.json` descriptor
+(registered in-app) with printed setup steps, and an `AGENTS.md` context block. Both share the
+Guard's `loopmd/<name>.loop.json`. It is idempotent, prints a plan before writing, and detects
+drift via `loopmd/generated.lock`.
 
 ```sh
 loopmd build [file]         # compile to native artifacts (--target, --force, --dry-run)
