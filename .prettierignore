@@ -1,0 +1,6 @@
+dist
+node_modules
+
+# Prose docs are not code-formatted (keeps the merged design docs untouched).
+*.md
+design
