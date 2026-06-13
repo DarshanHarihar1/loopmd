@@ -9,8 +9,8 @@ export interface HtmlOptions {
 
 export function renderHtml(records: RunRecord[], opts: HtmlOptions): string {
   const sorted = [...records].sort(sortRecords);
-  const totalTokens = records.reduce((s, r) => s + r.tokens.total, 0);
-  const totalCost = records.reduce((s, r) => s + (r.costUsd ?? 0), 0);
+  const totalTokens = records.reduce((s, r) => s + tokenTotal(r), 0);
+  const totalCost = records.reduce((s, r) => s + (Number(r.costUsd) || 0), 0);
   const needsHuman = records.filter((r) => r.needsHuman);
 
   const rows =
@@ -63,8 +63,14 @@ ${attention}
 
 function rowHtml(r: RunRecord): string {
   const flag = r.needsHuman ? '<span class="flag">!</span>' : "";
-  const cost = r.costUsd !== undefined ? `$${r.costUsd.toFixed(2)}` : "-";
-  return `    <tr class="${r.needsHuman ? "needs" : ""}"><td>${flag}</td><td>${esc(r.loop)}</td><td>${esc(r.outcome)}</td><td>${r.iterations}</td><td>${r.tokens.total}</td><td>${cost}</td><td>${esc(r.startedAt)}</td></tr>`;
+  const cost = r.costUsd !== undefined ? `$${(Number(r.costUsd) || 0).toFixed(2)}` : "-";
+  // Coerce numerics to numbers so a malformed on-disk record can't inject markup.
+  return `    <tr class="${r.needsHuman ? "needs" : ""}"><td>${flag}</td><td>${esc(r.loop)}</td><td>${esc(r.outcome)}</td><td>${Number(r.iterations) || 0}</td><td>${tokenTotal(r)}</td><td>${cost}</td><td>${esc(r.startedAt)}</td></tr>`;
+}
+
+// Defensive: records come from on-disk JSONL that may be malformed.
+function tokenTotal(r: RunRecord): number {
+  return Number(r.tokens?.total) || 0;
 }
 
 function sortRecords(a: RunRecord, b: RunRecord): number {

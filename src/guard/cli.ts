@@ -83,8 +83,11 @@ function assembleContext(
   const changedPaths =
     list(flagValue(argv, "--changed")) ?? payload.changedPaths ?? gitChangedPaths(cwd);
   const diffHash = flagValue(argv, "--diff-hash") ?? payload.diffHash ?? gitDiffHash(cwd);
+  // Fall back to deletions detected from `git status` so the irreversible-action
+  // gate (§3.9) fires even when the caller supplies nothing. Force-push / prod-call
+  // detection has no signal at hook time and remains caller-supplied.
   const irreversibleActions =
-    list(flagValue(argv, "--irreversible")) ?? payload.irreversibleActions ?? [];
+    list(flagValue(argv, "--irreversible")) ?? payload.irreversibleActions ?? gitDeletions(cwd);
   const target = (flagValue(argv, "--target") ?? payload.target ?? defaultTarget) as AgentTarget;
 
   return { target, tokens, changedPaths, diffHash, irreversibleActions };
@@ -125,6 +128,23 @@ function porcelainPath(line: string): string {
   return (arrow !== -1 ? rest.slice(arrow + 4) : rest).replace(/^"|"$/g, "");
 }
 
+// Deletions (porcelain status with a 'D' in either column) are irreversible actions.
+function gitDeletions(cwd: string): string[] {
+  try {
+    const out = execFileSync("git", ["status", "--porcelain"], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    return out
+      .split("\n")
+      .filter((l) => l.length > 2 && (l[0] === "D" || l[1] === "D"))
+      .map((l) => `delete ${porcelainPath(l)}`);
+  } catch {
+    return [];
+  }
+}
+
 function gitDiffHash(cwd: string): string {
   try {
     const diff = execFileSync("git", ["diff"], {
@@ -152,7 +172,9 @@ function flagValue(argv: string[], flag: string): string | undefined {
 }
 
 function num(s: string | undefined): number | undefined {
-  return s === undefined ? undefined : Number(s);
+  if (s === undefined) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined; // ignore --tokens NaN/Infinity
 }
 
 function list(s: string | undefined): string[] | undefined {

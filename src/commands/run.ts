@@ -34,6 +34,10 @@ export const run: Command = (argv) => {
   }
 
   const tokenOverride = flagValue(argv, "--tokens");
+  if (tokenOverride !== undefined && !isPositiveInt(tokenOverride)) {
+    console.error(`loopmd run: --tokens must be a positive integer (got '${tokenOverride}')`);
+    return 1;
+  }
   const tokens = tokenOverride !== undefined ? Number(tokenOverride) : ir.budget.tokens;
 
   const args = ["-p", `/goal ${ir.stopCondition}`];
@@ -41,8 +45,21 @@ export const run: Command = (argv) => {
   if (ir.isolation === "worktree") args.push("--isolation", "worktree");
 
   const result = spawnSync("claude", args, { stdio: "inherit" });
+  if (result.error) {
+    const why =
+      (result.error as NodeJS.ErrnoException).code === "ENOENT"
+        ? "claude not found on PATH"
+        : result.error.message;
+    console.error(`loopmd run: failed to launch claude — ${why}`);
+    return 1;
+  }
   return result.status ?? 0;
 };
+
+function isPositiveInt(s: string): boolean {
+  const n = Number(s);
+  return Number.isInteger(n) && n > 0;
+}
 
 function flagValue(argv: string[], flag: string): string | undefined {
   const i = argv.indexOf(flag);

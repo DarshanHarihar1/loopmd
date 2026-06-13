@@ -56,15 +56,16 @@ function sortRecords(a: RunRecord, b: RunRecord): number {
 const HEADERS = ["", "LOOP", "OUTCOME", "ITERS", "TOKENS", "COST", "DIFFS", "STARTED"] as const;
 
 function table(records: RunRecord[]): string[] {
+  // Defensive: records come from on-disk JSONL that may be malformed.
   const rows = records.map((r) => [
     r.needsHuman ? "!" : "",
-    r.loop,
-    r.outcome,
-    String(r.iterations),
-    String(r.tokens.total),
-    r.costUsd !== undefined ? `$${r.costUsd.toFixed(2)}` : "-",
-    String(r.diffsTouched.length),
-    r.startedAt,
+    String(r.loop ?? ""),
+    String(r.outcome ?? ""),
+    String(r.iterations ?? 0),
+    String(r.tokens?.total ?? 0),
+    r.costUsd !== undefined ? `$${(Number(r.costUsd) || 0).toFixed(2)}` : "-",
+    String(r.diffsTouched?.length ?? 0),
+    String(r.startedAt ?? ""),
   ]);
 
   const widths = HEADERS.map((h, i) => Math.max(h.length, ...rows.map((row) => row[i]!.length)));
@@ -78,7 +79,7 @@ function table(records: RunRecord[]): string[] {
 }
 
 function totals(records: RunRecord[]): string {
-  const tokens = records.reduce((sum, r) => sum + r.tokens.total, 0);
+  const tokens = records.reduce((sum, r) => sum + (r.tokens?.total ?? 0), 0);
   const cost = records.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
   const needsHuman = records.filter((r) => r.needsHuman).length;
   return `totals: ${records.length} run(s) · ${tokens} tokens · $${cost.toFixed(2)} · ${needsHuman} need human`;

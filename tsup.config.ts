@@ -1,4 +1,7 @@
 import { defineConfig } from "tsup";
+import { copyFileSync, chmodSync, readFileSync } from "node:fs";
+
+const pkgVersion = JSON.parse(readFileSync("package.json", "utf8")).version as string;
 
 // Standalone bundles:
 //  - cli.js   → the `loopmd` binary
@@ -16,8 +19,16 @@ export default defineConfig({
   target: "node20",
   splitting: false,
   clean: true,
+  // Inject the package version so `loopmd --version` reflects the published release.
+  define: { "process.env.LOOPMD_VERSION": JSON.stringify(pkgVersion) },
   dts: { entry: { sdk: "src/sdk.ts" } },
   banner: {
     js: "#!/usr/bin/env node",
+  },
+  // Ship the /bin/sh Guard fallback next to the bundled guard.js (design §4),
+  // so it sits beside guard.js (which it execs when Node is available).
+  onSuccess: async () => {
+    copyFileSync("scripts/guard.sh", "dist/guard.sh");
+    chmodSync("dist/guard.sh", 0o755);
   },
 });

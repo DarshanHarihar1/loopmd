@@ -3,3 +3,6 @@ dist/
 
 # Run records (per design §3.7, the records dir is not committed)
 loopmd/records/
+
+# npm pack artifacts
+*.tgz

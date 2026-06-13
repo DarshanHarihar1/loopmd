@@ -74,13 +74,14 @@ function emitCrontab(ir: LoopIR): EmittedFile {
 }
 
 function emitWorkflow(ir: LoopIR): EmittedFile {
-  const event = ir.schedule.event ?? "push";
+  // Map the IR event to a real GitHub Actions trigger ("on-merge" → push to main).
+  const trigger = ir.schedule.event === "on-merge" ? "push" : (ir.schedule.event ?? "push");
   const tokenLine = ir.budget.tokens !== undefined ? ` --tokens ${ir.budget.tokens}` : "";
 
   const content = [
     `name: loopmd — ${ir.name}`,
     `on:`,
-    `  ${event}:`,
+    `  ${trigger}:`,
     `    branches: [main]`,
     ``,
     `jobs:`,
