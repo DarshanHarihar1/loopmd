@@ -8,7 +8,9 @@ import { parseLoop } from "../parser/parse.js";
 import { paths } from "../paths.js";
 import { formatDiagnostics, type Diagnostic } from "../diagnostics.js";
 import type { LoopIR } from "../ir/types.js";
-import { claudeCodeAdapter } from "../adapter/claude-code.js";
+import type { EmittedFile } from "../adapter/types.js";
+import { adapters } from "../adapter/index.js";
+import { codexSetupInstructions } from "../adapter/codex.js";
 import { emitFiles, planLines } from "../emitter.js";
 
 const HELP = `loopmd build — compile LOOP.md to native Claude Code artifacts
@@ -29,7 +31,7 @@ export const build: Command = (argv) => {
   const force = argv.includes("--force");
   const dryRun = argv.includes("--dry-run");
   const targetFlag = flagValue(argv, "--target") as "claude-code" | "codex" | undefined;
-  const file = argv.find((a) => !a.startsWith("-")) ?? paths.loopFile;
+  const file = positionalArg(argv, ["--target"]) ?? paths.loopFile;
   const cwd = process.cwd();
 
   let text: string;
@@ -51,18 +53,30 @@ export const build: Command = (argv) => {
 
   const activeTargets = ir!.targets.filter((t) => targetFlag === undefined || t === targetFlag);
 
-  const allFiles = [];
+  const compiled: EmittedFile[] = [];
   for (const target of activeTargets) {
-    if (target === "claude-code") {
-      allFiles.push(...claudeCodeAdapter.compile(ir!, { cwd }));
-    } else {
-      console.error(`loopmd build: adapter for '${target}' not yet implemented (Phase 5)`);
-    }
+    compiled.push(...adapters[target].compile(ir!, { cwd }));
   }
 
-  if (allFiles.length === 0) {
+  if (compiled.length === 0) {
     console.error("loopmd build: no targets to compile");
     return 1;
+  }
+
+  // Multi-target builds may emit the same path from more than one adapter (e.g. the
+  // shared loop.json). Collapse exact duplicates; a same-path/different-content pair
+  // is a real clash and aborts the build.
+  const allFiles: EmittedFile[] = [];
+  const seen = new Map<string, string>();
+  for (const f of compiled) {
+    const prior = seen.get(f.path);
+    if (prior === undefined) {
+      seen.set(f.path, f.content);
+      allFiles.push(f);
+    } else if (prior !== f.content) {
+      console.error(`loopmd build: path clash on '${f.path}' between targets`);
+      return 1;
+    }
   }
 
   // Check for drift: if lock exists and LOOP.md hash matches, any file diff is a manual edit.
@@ -107,6 +121,12 @@ export const build: Command = (argv) => {
     console.log("\nalready up to date");
   }
 
+  // Codex Automations are registered in-app, so print the registration steps.
+  if (activeTargets.includes("codex")) {
+    console.log("");
+    for (const line of codexSetupInstructions(ir!)) console.log(line);
+  }
+
   return 0;
 };
 
@@ -135,4 +155,18 @@ function sha256(text: string): string {
 function flagValue(argv: string[], flag: string): string | undefined {
   const i = argv.indexOf(flag);
   return i !== -1 ? argv[i + 1] : undefined;
+}
+
+// First non-flag argument, skipping the values that belong to value-taking flags
+// (e.g. the `codex` in `--target codex`) so they aren't mistaken for the file path.
+function positionalArg(argv: string[], valueFlags: string[]): string | undefined {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]!;
+    if (a.startsWith("-")) {
+      if (valueFlags.includes(a)) i++;
+      continue;
+    }
+    return a;
+  }
+  return undefined;
 }
