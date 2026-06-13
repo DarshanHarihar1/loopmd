@@ -132,9 +132,9 @@ describe("loopmd report", () => {
     expect(logs.join("\n")).toContain("invalid --since");
   });
 
-  it("rejects a non-term --format and exits 1", async () => {
-    expect(await report(["--format", "html"])).toBe(1);
-    expect(logs.join("\n")).toContain("Phase 6");
+  it("rejects an unknown --format and exits 1", async () => {
+    expect(await report(["--format", "pdf"])).toBe(1);
+    expect(logs.join("\n")).toContain("unknown --format");
   });
 
   describe("enrichment", () => {

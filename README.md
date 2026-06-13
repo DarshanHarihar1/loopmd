@@ -8,12 +8,14 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 5 (Codex adapter). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
+Phase 6 (operability). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
 compiles it into native artifacts for **Claude Code** and/or **Codex** (one spec, two targets);
 the **Guard** verifies, budgets, detects stalls, escalates, records, and decides during a run —
-identically across both targets; and `report` renders a terminal brief from those records.
-`run` triggers a loop now (also called by the generated scheduler). `doctor` ships stub-level
-Codex warnings; its full environment checks land in Phase 6.
+identically across both targets; `report` renders the brief as a terminal table, a self-contained
+**HTML** file, or a **Slack** digest; and `doctor` runs full environment checks (tool versions,
+`/goal` availability, Codex Automation registration, machine-sleep, credential scoping) with an
+exit code that reflects the worst severity. `run` triggers a loop now (also called by the
+generated scheduler).
 
 ## The Guard
 
@@ -61,14 +63,17 @@ Guard's `loopmd/<name>.loop.json`. It is idempotent, prints a plan before writin
 drift via `loopmd/generated.lock`.
 
 ```sh
-loopmd build [file]         # compile to native artifacts (--target, --force, --dry-run)
-loopmd run <name>           # trigger the loop now (claude -p "/goal …"); used by the scheduler
-loopmd report [--since 24h] # terminal brief from run records (--format term)
+loopmd build [file]          # compile to native artifacts (--target, --force, --dry-run)
+loopmd run <name>            # trigger the loop now (claude -p "/goal …"); used by the scheduler
+loopmd report [--since 24h]  # brief from run records (--format term|html|slack, --out <file>)
+loopmd doctor                # environment checks; exit 0 ok · 1 warnings · 2 failures
 ```
 
 `report` reads the Guard's records under `~/.loopmd/` (override with `LOOPMD_HOME`), lists
 escalated / needs-human runs first, totals tokens and cost, and — when Claude Code session
-JSONL is present — adds per-skill token attribution. `--since` accepts windows like `24h`/`7d`.
+JSONL is present — adds per-skill token attribution. `--format html` writes a self-contained
+shareable page; `--format slack` emits a Block Kit digest (channel taken from `notify.channel`);
+`--out <file>` writes to a file instead of stdout. `--since` accepts windows like `24h`/`7d`.
 
 ## Development
 
