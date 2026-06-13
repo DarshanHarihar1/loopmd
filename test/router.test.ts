@@ -3,8 +3,9 @@ import { run, VERSION } from "../src/router.js";
 import { commands } from "../src/commands/index.js";
 
 const COMMAND_NAMES = ["init", "build", "run", "guard", "validate", "doctor", "report"];
-// init and validate landed in Phase 1; build/run in Phase 3; the rest are still stubs.
-const STUB_COMMANDS = ["guard", "doctor", "report"];
+// init/validate (Phase 1), build/run (Phase 3), report (Phase 4) are implemented.
+// doctor is the last stub; guard exits 2 with no --loop, so it also lands here.
+const STUB_COMMANDS = ["guard", "doctor"];
 
 describe("router", () => {
   beforeEach(() => {
@@ -41,5 +42,11 @@ describe("router", () => {
   it.each(STUB_COMMANDS)("dispatches '%s' to a stub that exits non-zero", async (name) => {
     const code = await run([name]);
     expect(code).toBe(2);
+  });
+
+  // Every MVP command must answer --help with exit 0 (Phase 4 CLI ergonomics).
+  const MVP_COMMANDS = ["init", "build", "run", "guard", "validate", "report"];
+  it.each(MVP_COMMANDS)("'%s --help' prints help and exits 0", async (name) => {
+    expect(await run([name, "--help"])).toBe(0);
   });
 });

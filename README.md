@@ -8,10 +8,11 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 2 (the Guard runtime). `LOOP.md` parses to a validated Loop IR (`init`/`validate`), and
-the **Guard** — the zero-dependency safety shim that runs during a loop — verifies, budgets,
-detects stalls, escalates, records, and decides. The remaining commands (`build`, `run`,
-`doctor`, `report`) are stubs that land in their own phases.
+Phase 4 (the MVP). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
+compiles it into native Claude Code artifacts; the **Guard** verifies, budgets, detects
+stalls, escalates, records, and decides during a run; and `report` renders a terminal brief
+from those records. `run` triggers a loop now (also called by the generated scheduler).
+`doctor` is the last stub (lands in Phase 6).
 
 ## The Guard
 
@@ -48,6 +49,22 @@ loopmd validate --force     # allow a loop with no token/iteration budget ceilin
 
 A loop with no `budget.tokens` or `budget.iterations` fails `validate` unless `--force` is
 passed — every emitted loop must carry a budget ceiling.
+
+## Build, run & report
+
+`build` compiles `LOOP.md` into Claude Code's native artifacts (command, Stop hook, a
+generated scheduler, a `CLAUDE.md` context block, and the Guard's `loopmd/<name>.loop.json`).
+It is idempotent, prints a plan before writing, and detects drift via `loopmd/generated.lock`.
+
+```sh
+loopmd build [file]         # compile to native artifacts (--target, --force, --dry-run)
+loopmd run <name>           # trigger the loop now (claude -p "/goal …"); used by the scheduler
+loopmd report [--since 24h] # terminal brief from run records (--format term)
+```
+
+`report` reads the Guard's records under `~/.loopmd/` (override with `LOOPMD_HOME`), lists
+escalated / needs-human runs first, totals tokens and cost, and — when Claude Code session
+JSONL is present — adds per-skill token attribution. `--since` accepts windows like `24h`/`7d`.
 
 ## Development
 
