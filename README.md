@@ -8,9 +8,30 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 1 (schema, parser & Loop IR). `LOOP.md` parses to a validated, tool-agnostic Loop IR,
-and the `init` and `validate` commands work end-to-end. The remaining commands (`build`, `run`,
-`guard`, `doctor`, `report`) are stubs that land in their own phases.
+Phase 2 (the Guard runtime). `LOOP.md` parses to a validated Loop IR (`init`/`validate`), and
+the **Guard** — the zero-dependency safety shim that runs during a loop — verifies, budgets,
+detects stalls, escalates, records, and decides. The remaining commands (`build`, `run`,
+`doctor`, `report`) are stubs that land in their own phases.
+
+## The Guard
+
+The Guard is the one component loopmd owns end-to-end, identical across targets (design §3.5).
+Each invocation it: runs the `verifiers` (aggregating pass/fail, honoring `any`), enforces the
+token/iteration `budget`, detects stalls (same diff or repeated verifier failures), escalates
+when a changed path matches an `escalation.touches` glob or an irreversible action is detected,
+appends a normalized `RunRecord` (JSONL), and returns `DONE` / `CONTINUE` / `HALT`.
+
+```sh
+loopmd guard --loop <name>          # reads loopmd/<name>.loop.json (emitted by build, Phase 3)
+loopmd guard --loop <name> --stdin  # hook integration: JSON context payload on stdin
+```
+
+Records and per-loop state live under `~/.loopmd/` (override with `LOOPMD_HOME`). Notifications
+go to the `notify.channel`; `stdout` is fully wired, with `slack:`/`email:`/`desktop` delivery
+landing in Phase 6. The Guard ships as a single self-contained `guard.js`, plus a `/bin/sh`
+fallback (`scripts/guard.sh`) for hook contexts without Node.
+
+Exit codes: `0` done/continue · `1` halt · `2` error.
 
 ## LOOP.md
 
