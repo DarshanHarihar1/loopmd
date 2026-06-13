@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import type { Verifier } from "../ir/types.js";
+import { getRegisteredVerifier } from "./registry.js";
 
 export interface VerifierOutcome {
   name: string;
@@ -47,6 +48,11 @@ export async function runVerifier(v: Verifier, cwd: string): Promise<VerifierOut
 }
 
 async function evaluate(v: Verifier, cwd: string): Promise<boolean> {
+  // A plugin-registered kind (loopmd-verifier-*) takes precedence and lets the
+  // Guard run community check types without a core change.
+  const plugin = getRegisteredVerifier(v.kind);
+  if (plugin) return plugin(v, cwd);
+
   switch (v.kind) {
     case "run":
     case "exit_zero":
@@ -56,6 +62,8 @@ async function evaluate(v: Verifier, cwd: string): Promise<boolean> {
       return v.path ? existsSync(isAbsolute(v.path) ? v.path : join(cwd, v.path)) : false;
     case "http_ok":
       return v.url ? httpOk(v.url) : false;
+    default:
+      return false;
   }
 }
 

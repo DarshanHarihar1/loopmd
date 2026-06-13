@@ -9,7 +9,7 @@ import { paths } from "../paths.js";
 import { formatDiagnostics, type Diagnostic } from "../diagnostics.js";
 import type { LoopIR } from "../ir/types.js";
 import type { EmittedFile } from "../adapter/types.js";
-import { adapters } from "../adapter/index.js";
+import { getAdapter } from "../adapter/resolve.js";
 import { codexSetupInstructions } from "../adapter/codex.js";
 import { emitFiles, planLines } from "../emitter.js";
 
@@ -22,7 +22,7 @@ Usage: loopmd build [file] [options]
   --force          allow a loop with no budget ceiling
   --dry-run        print what would be written without writing anything`;
 
-export const build: Command = (argv) => {
+export const build: Command = async (argv) => {
   if (argv.includes("-h") || argv.includes("--help")) {
     console.log(HELP);
     return 0;
@@ -55,7 +55,14 @@ export const build: Command = (argv) => {
 
   const compiled: EmittedFile[] = [];
   for (const target of activeTargets) {
-    compiled.push(...adapters[target].compile(ir!, { cwd }));
+    let adapter;
+    try {
+      adapter = await getAdapter(target);
+    } catch (err) {
+      console.error(`loopmd build: ${(err as Error).message}`);
+      return 1;
+    }
+    compiled.push(...adapter.compile(ir!, { cwd }));
   }
 
   if (compiled.length === 0) {

@@ -8,14 +8,15 @@ See [`design/`](./design) for the technical specification and the phased impleme
 
 ## Status
 
-Phase 6 (operability). `LOOP.md` parses to a validated Loop IR (`init`/`validate`); `build`
-compiles it into native artifacts for **Claude Code** and/or **Codex** (one spec, two targets);
-the **Guard** verifies, budgets, detects stalls, escalates, records, and decides during a run —
-identically across both targets; `report` renders the brief as a terminal table, a self-contained
-**HTML** file, or a **Slack** digest; and `doctor` runs full environment checks (tool versions,
-`/goal` availability, Codex Automation registration, machine-sleep, credential scoping) with an
-exit code that reflects the worst severity. `run` triggers a loop now (also called by the
-generated scheduler).
+Phase 7 (v1 — extensibility). `LOOP.md` parses to a validated, versioned Loop IR
+(`init`/`validate`); `build` compiles it into native artifacts for **Claude Code** and/or
+**Codex** (one spec, two targets); the **Guard** verifies, budgets, detects stalls, escalates,
+records, and decides during a run — identically across both targets; `report` renders the brief
+as a terminal table, a self-contained **HTML** file, or a **Slack** digest; and `doctor` runs
+full environment checks with an exit code that reflects the worst severity. loopmd is now
+extensible end-to-end: external **adapters** (`loopmd-adapter-*`) and **verifiers**
+(`loopmd-verifier-*`) plug in through a published, versioned [SDK](./docs/writing-an-adapter.md),
+and the IR is versioned for forward-compat. Full docs live in [`docs/`](./docs).
 
 ## The Guard
 
