@@ -6,6 +6,12 @@
   "bin": {
     "loopmd": "dist/cli.js"
   },
+  "exports": {
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "import": "./dist/sdk.js"
+    }
+  },
   "files": [
     "dist"
   ],

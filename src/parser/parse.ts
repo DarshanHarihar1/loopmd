@@ -15,6 +15,7 @@ import {
 import { splitSections, bodyText, bodyEntries, type Section } from "./sections.js";
 import { parseVerifiers } from "./verifiers.js";
 import { parseEscalation } from "./escalation.js";
+import { checkVersion, applyMigrations } from "../ir/version.js";
 
 export interface ParseResult {
   ir?: LoopIR;
@@ -44,7 +45,11 @@ export function parseLoop(text: string): ParseResult {
     // Frontmatter is the machine contract; without it we can't build an IR.
     return { diagnostics };
   }
-  const fm = fmParsed.data;
+
+  // Reject files authored for a newer loopmd; migrate older ones up to current (§3.10).
+  const versionDiag = checkVersion(fmParsed.data.version);
+  if (versionDiag) return { diagnostics: [versionDiag] };
+  const fm = applyMigrations(fmParsed.data.version, fmParsed.data) as Frontmatter;
 
   // 2. Sections.
   const bodyStartLine = startsWithFrontmatter(text) ? frontmatterEndLine(text) + 1 : 1;
