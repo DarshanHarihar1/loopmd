@@ -3,8 +3,8 @@ import { run, VERSION } from "../src/router.js";
 import { commands } from "../src/commands/index.js";
 
 const COMMAND_NAMES = ["init", "build", "run", "guard", "validate", "doctor", "report"];
-// init and validate landed in Phase 1; the rest are still stubs.
-const STUB_COMMANDS = ["build", "run", "guard", "doctor", "report"];
+// init and validate landed in Phase 1; build/run in Phase 3; the rest are still stubs.
+const STUB_COMMANDS = ["guard", "doctor", "report"];
 
 describe("router", () => {
   beforeEach(() => {
