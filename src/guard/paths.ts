@@ -1,5 +1,5 @@
 // Where the Guard keeps its data (records + state). Defaults to ~/.loopmd
-// (design §3.5/§3.8); LOOPMD_HOME overrides it for relocation and tests.
+//; LOOPMD_HOME overrides it for relocation and tests.
 
 import { homedir } from "node:os";
 import { join } from "node:path";

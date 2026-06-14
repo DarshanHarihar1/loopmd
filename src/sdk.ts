@@ -1,4 +1,4 @@
-// loopmd plugin SDK (design §3.10) — the stable, versioned public surface for
+// loopmd plugin SDK — the stable, versioned public surface for
 // building external adapters and verifiers. Import from "loopmd/sdk".
 //
 // Bump SDK_VERSION on a breaking change to these contracts.

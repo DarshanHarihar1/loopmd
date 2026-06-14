@@ -1,4 +1,4 @@
-// Claude Code adapter (design §3.4.1).
+// Claude Code adapter.
 // Capability profile: nativeGoal, nativeHooks; no nativeSchedule → emit Scheduler.
 // Emits: command, Stop hook, scheduler (crontab or GH Actions), CLAUDE.md block, loop.json.
 

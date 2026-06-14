@@ -1,4 +1,4 @@
-// Notification dispatch (design §3.5 #4, §3.6 notify). The `stdout` channel is
+// Notification dispatch. The `stdout` channel is
 // fully wired; slack:/email:/desktop emit a structured notice to the sink (the
 // operator forwards it, e.g. via the `report --format slack` payload). Wiring a
 // live webhook/SMTP transport is left to the deployment.

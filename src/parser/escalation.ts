@@ -1,4 +1,4 @@
-// Parse the `## Escalate to me if` section into Escalation[] (design §3.1, §3.2).
+// Parse the `## Escalate to me if` section into Escalation[].
 //
 // Each list item is one rule:
 //   - touches: ["auth/**", "billing/**"]

@@ -1,7 +1,7 @@
-// Escalation (design §3.5 #4, §3.9): require a human when a changed path matches an
+// Escalation: require a human when a changed path matches an
 // `escalation.touches` glob, or when any irreversible action is detected. Irreversible
 // actions always gate to escalation — the `on_irreversible` flag cannot disable the
-// safety default (§3.9).
+// safety default.
 
 import type { Escalation } from "../ir/types.js";
 

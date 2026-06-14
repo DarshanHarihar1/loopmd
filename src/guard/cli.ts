@@ -84,7 +84,7 @@ function assembleContext(
     list(flagValue(argv, "--changed")) ?? payload.changedPaths ?? gitChangedPaths(cwd);
   const diffHash = flagValue(argv, "--diff-hash") ?? payload.diffHash ?? gitDiffHash(cwd);
   // Fall back to deletions detected from `git status` so the irreversible-action
-  // gate (§3.9) fires even when the caller supplies nothing. Force-push / prod-call
+  // gate fires even when the caller supplies nothing. Force-push / prod-call
   // detection has no signal at hook time and remains caller-supplied.
   const irreversibleActions =
     list(flagValue(argv, "--irreversible")) ?? payload.irreversibleActions ?? gitDeletions(cwd);

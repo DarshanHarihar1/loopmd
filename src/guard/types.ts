@@ -6,7 +6,7 @@ import type { AgentTarget } from "../ir/types.js";
 export type Decision = "DONE" | "CONTINUE" | "HALT";
 export type HaltReason = "budget" | "stall" | "escalate" | "error";
 
-// The normalized run record, exactly as in design §3.5. Shared with the report.
+// The normalized run record. Shared with the report.
 export interface RunRecord {
   loop: string;
   runId: string;

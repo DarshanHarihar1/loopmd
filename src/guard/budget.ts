@@ -1,5 +1,5 @@
-// Budget enforcement (design §3.5 #2): HALT when the token or iteration ceiling
-// is reached. Per §3.5 the Guard's budget responsibility is tokens + iterations.
+// Budget enforcement: HALT when the token or iteration ceiling
+// is reached. The Guard's budget responsibility is tokens + iterations.
 
 import type { Budget } from "../ir/types.js";
 import type { HaltReason } from "./types.js";

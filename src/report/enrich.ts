@@ -1,6 +1,6 @@
-// Optional enrichment from Claude Code's native telemetry (design §3.8): per-skill
+// Optional enrichment from Claude Code's native telemetry: per-skill
 // token attribution scanned from ~/.claude/projects/*.jsonl. This is best-effort —
-// the native format drifts (spec §6), so anything unparseable is skipped and the
+// the native format drifts, so anything unparseable is skipped and the
 // report still renders from RunRecords alone. Absence is never fatal.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";

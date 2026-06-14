@@ -1,4 +1,4 @@
-// Environment diagnostics for `loopmd doctor` (design §3.6, §3.4.2).
+// Environment diagnostics for `loopmd doctor`.
 // Pure and injectable: runChecks() takes a DoctorEnv so tests can drive every
 // severity deterministically. The real command wires in execFileSync + process.env.
 
@@ -21,7 +21,7 @@ export interface DoctorEnv {
   versionOf: (cmd: string) => string | null;
 }
 
-// Pinned tested version ranges — doctor is the runtime source of truth (§6, §7).
+// Pinned tested version ranges — doctor is the runtime source of truth.
 // Maintained here as native primitives drift; bump as new versions are verified.
 export const TESTED: Record<AgentTarget, { cmd: string; min: string }> = {
   "claude-code": { cmd: "claude", min: "1.0.0" },
@@ -104,7 +104,7 @@ function credentialCheck(env: DoctorEnv, target: AgentTarget): Check {
     return {
       name: "credentials",
       status: "ok",
-      message: "ANTHROPIC_API_KEY set — keep it scoped to least privilege (§3.9)",
+      message: "ANTHROPIC_API_KEY set — keep it scoped to least privilege",
     };
   }
   return { name: "credentials", status: "ok", message: "no credential check for this target" };
