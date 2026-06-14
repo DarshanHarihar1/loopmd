@@ -276,6 +276,18 @@ describe("workflow scheduler", () => {
       .find((f) => f.path.includes(".github/workflows/"))!;
     expect(wf.content).toContain("ANTHROPIC_API_KEY");
     expect(wf.content).toContain("npx loopmd run nightly-ci-triage");
-    expect(wf.content).toContain("--tokens 150000");
+    expect(wf.content).not.toContain("--tokens"); // reconciled: not a real claude flag
+  });
+
+  it("passes --budget-usd in the workflow when a dollar ceiling is set", () => {
+    const fixture = FIXTURE.replace('schedule: "0 2 * * *"', 'schedule: "on-merge"').replace(
+      "  iterations: 20",
+      "  iterations: 20\n  usd: 5",
+    );
+    const { ir } = parseLoop(fixture);
+    const wf = claudeCodeAdapter
+      .compile(ir!, { cwd: "/tmp" })
+      .find((f) => f.path.includes(".github/workflows/"))!;
+    expect(wf.content).toContain("npx loopmd run nightly-ci-triage --budget-usd 5");
   });
 });

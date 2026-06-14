@@ -18,6 +18,14 @@ const budgetSchema = z
     tokens: z.number().int().positive().optional(),
     iterations: z.number().int().positive().optional(),
     wall_clock: z.string().optional(),
+    usd: z.number().positive().optional(),
+  })
+  .strict();
+
+const agentSchemaDef = z
+  .object({
+    description: z.string().min(1),
+    prompt: z.string().min(1),
   })
   .strict();
 
@@ -42,6 +50,8 @@ export const frontmatterSchema = z
     isolation: z.enum(["worktree", "inplace"]).default("worktree"),
     model: z.string().default("default"),
     notify: notifySchema.default({ on: [], channel: "stdout" }),
+    permission_mode: z.string().optional(),
+    agents: z.record(agentSchemaDef).optional(),
   })
   .strict();
 
@@ -71,6 +81,7 @@ export const loopIRSchema = z
       tokens: z.number().int().positive().optional(),
       iterations: z.number().int().positive().optional(),
       wallClock: z.string().optional(),
+      usd: z.number().positive().optional(),
     }),
     schedule: z.object({
       kind: z.enum(["cron", "manual", "event"]),
@@ -81,6 +92,8 @@ export const loopIRSchema = z
     model: z.string(),
     context: z.array(z.string()),
     notify: notifySchema,
+    permissionMode: z.string().optional(),
+    agents: z.record(agentSchemaDef).optional(),
   })
   .strict();
 
