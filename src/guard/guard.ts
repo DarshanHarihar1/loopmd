@@ -1,4 +1,4 @@
-// The Guard runtime (design §3.5): the one component loopmd owns end-to-end, identical
+// The Guard runtime: the one component loopmd owns end-to-end, identical
 // for both targets. Per invocation it verifies, enforces budget, detects stalls,
 // escalates (notifying), records, and decides DONE/CONTINUE/HALT.
 //

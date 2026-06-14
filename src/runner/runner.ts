@@ -1,4 +1,4 @@
-// Synthesized Runner (design §3.3, §3.10): drives a tool that has NO native /goal.
+// Synthesized Runner: drives a tool that has NO native /goal.
 // Run one turn toward the goal, ask the Guard to decide, and repeat until DONE/HALT
 // or the iteration ceiling. Both built-in targets are native-goal, so this path is
 // for plugin adapters whose capability profile sets nativeGoal: false.

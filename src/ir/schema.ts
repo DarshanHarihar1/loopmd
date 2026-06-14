@@ -1,4 +1,4 @@
-// Schema validation for LOOP.md (design §3.1, §3.2). Two layers:
+// Schema validation for LOOP.md. Two layers:
 //   - frontmatterSchema: validates the raw YAML frontmatter as authored.
 //   - loopIRSchema:      validates the normalized Loop IR after section mapping.
 // Both produce zod issues that `zodToDiagnostics` turns into located diagnostics.

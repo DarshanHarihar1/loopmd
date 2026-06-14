@@ -1,4 +1,4 @@
-// loopmd run <name> — drive a loop now (design §3.6), also called by the generated
+// loopmd run <name> — drive a loop now, also called by the generated
 // scheduler. Each turn runs Claude Code headlessly on a *persistent* session (first
 // turn --session-id, later turns --resume), then the Guard verifies/budgets/records
 // and decides DONE / CONTINUE / HALT. Iterates until DONE/HALT or the iteration

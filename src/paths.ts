@@ -1,4 +1,4 @@
-// Deterministic generated-artifact paths (design §3.7).
+// Deterministic generated-artifact paths.
 // Single source of truth so emitters in later phases stay consistent.
 export const paths = {
   loopFile: "LOOP.md",

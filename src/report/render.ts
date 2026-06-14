@@ -1,6 +1,6 @@
 // Render the terminal brief from RunRecords (+ optional native attribution).
 // Escalated / needs-human runs sort first and are flagged; a totals line and an
-// optional "Needs attention" section make the brief scannable at a glance (§3.8).
+// optional "Needs attention" section make the brief scannable at a glance.
 
 import type { RunRecord } from "../guard/types.js";
 import type { SkillTokens } from "./enrich.js";

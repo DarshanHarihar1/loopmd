@@ -1,4 +1,4 @@
-// Slack digest payload (design §3.8). A Block Kit message ready to POST to Slack.
+// Slack digest payload. A Block Kit message ready to POST to Slack.
 // The channel is taken from a loop's `notify.channel` (e.g. "slack:#eng-loops").
 
 import type { RunRecord } from "../guard/types.js";

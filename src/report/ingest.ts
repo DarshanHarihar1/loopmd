@@ -1,4 +1,4 @@
-// Read all RunRecords the Guard has written across every loop (design §3.8):
+// Read all RunRecords the Guard has written across every loop:
 // the report's universal source, independent of any native telemetry.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";

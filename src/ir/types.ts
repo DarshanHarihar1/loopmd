@@ -1,4 +1,4 @@
-// The Loop IR: a tool-agnostic, normalized representation of a LOOP.md (design §3.2).
+// The Loop IR: a tool-agnostic, normalized representation of a LOOP.md.
 // This is the contract every adapter compiles from; it is frozen as the input
 // to Phases 2–7, so its shape is deliberately conservative.
 

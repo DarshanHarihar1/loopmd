@@ -1,4 +1,4 @@
-// loopmd doctor — environment diagnostics (design §3.6, §3.4.2).
+// loopmd doctor — environment diagnostics.
 // Checks tool versions, /goal availability, Codex Automation registration,
 // machine-sleep, and credential scoping; exit code reflects the worst severity.
 

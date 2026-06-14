@@ -1,4 +1,4 @@
-// Adapter Registry (design §2.2): maps each agent target to its adapter so the
+// Adapter Registry: maps each agent target to its adapter so the
 // compiler can branch on the target without hard-coding per-tool logic in `build`.
 
 import type { AgentTarget } from "../ir/types.js";

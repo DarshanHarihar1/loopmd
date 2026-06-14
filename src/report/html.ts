@@ -1,4 +1,4 @@
-// Single-file, dependency-free HTML brief (design §3.8). Same data as the terminal
+// Single-file, dependency-free HTML brief. Same data as the terminal
 // report, rendered as a self-contained document you can open or share directly.
 
 import type { RunRecord } from "../guard/types.js";

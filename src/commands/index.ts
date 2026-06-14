@@ -7,7 +7,7 @@ import { validate } from "./validate.js";
 import { doctor } from "./doctor.js";
 import { report } from "./report.js";
 
-// The full CLI surface (design §3.6). Each handler lands in its own phase.
+// The full CLI surface. Each handler lands in its own phase.
 export const commands: Record<string, Command> = {
   init,
   build,

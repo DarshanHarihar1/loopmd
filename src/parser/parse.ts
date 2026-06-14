@@ -1,4 +1,4 @@
-// Top-level LOOP.md parser: text → validated Loop IR + diagnostics (design §3.1).
+// Top-level LOOP.md parser: text → validated Loop IR + diagnostics.
 // gray-matter splits frontmatter from body; the body is split into sections, each
 // section maps to an IR field, and both layers are schema-validated with zod.
 
@@ -46,7 +46,7 @@ export function parseLoop(text: string): ParseResult {
     return { diagnostics };
   }
 
-  // Reject files authored for a newer loopmd; migrate older ones up to current (§3.10).
+  // Reject files authored for a newer loopmd; migrate older ones up to current.
   const versionDiag = checkVersion(fmParsed.data.version);
   if (versionDiag) return { diagnostics: [versionDiag] };
   const fm = applyMigrations(fmParsed.data.version, fmParsed.data) as Frontmatter;

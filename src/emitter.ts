@@ -1,4 +1,4 @@
-// Idempotent file emitter with managed-block support (design §3.7).
+// Idempotent file emitter with managed-block support.
 // A "managed block" is a region in a shared file (e.g. CLAUDE.md) delimited by:
 //   <!-- loopmd:start <name> --> ... <!-- loopmd:end -->
 // The emitter updates only the block, leaving surrounding hand-written content intact.

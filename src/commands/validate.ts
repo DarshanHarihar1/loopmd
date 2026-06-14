@@ -10,7 +10,7 @@ const HELP = `loopmd validate — schema + feasibility check for a LOOP.md
 Usage: loopmd validate [file] [--force]
 
   file       path to the LOOP.md (default: ./LOOP.md)
-  --force    allow a loop with no token/iteration budget ceiling (§3.9)`;
+  --force    allow a loop with no token/iteration budget ceiling`;
 
 export const validate: Command = (argv) => {
   if (argv.includes("-h") || argv.includes("--help")) {
@@ -42,7 +42,7 @@ export const validate: Command = (argv) => {
   return 0;
 };
 
-// §3.9 safety rule: a loop with no token or iteration ceiling is a validation error
+// Safety rule: a loop with no token or iteration ceiling is a validation error
 // unless the author opts out with --force.
 function checkBudgetCeiling(ir: LoopIR, force: boolean): Diagnostic[] {
   if (force) return [];

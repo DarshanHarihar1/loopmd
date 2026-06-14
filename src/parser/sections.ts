@@ -1,5 +1,5 @@
 // Split the markdown body of a LOOP.md into its `## ` sections, preserving the
-// original-file line numbers so diagnostics can point at the offending line (design §3.1).
+// original-file line numbers so diagnostics can point at the offending line.
 
 export interface SectionLine {
   text: string;
