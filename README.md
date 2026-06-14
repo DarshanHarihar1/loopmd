@@ -162,5 +162,6 @@ npm run format     # prettier --check
 
 Publishing to npm is automated on GitHub Release via [`.github/workflows/publish.yml`](./.github/workflows/publish.yml)
 — it runs the full gate, verifies the tag matches the version, and publishes with a provenance
-attestation (npm Trusted Publishing / OIDC, with a token fallback). See [RELEASING.md](./RELEASING.md).
+attestation (npm Trusted Publishing / OIDC, with a token fallback). Cut a release by bumping the
+version (`npm version patch`), pushing the tag, and publishing a GitHub Release for it.
 
