@@ -1,6 +1,6 @@
 {
   "name": "loopmd",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Compile a declarative LOOP.md into native agent-loop wiring for Claude Code and Codex.",
   "keywords": [
     "claude-code",
