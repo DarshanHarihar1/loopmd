@@ -99,6 +99,18 @@ function normalizeTokens(t: StdinPayload["tokens"]): GuardContext["tokens"] {
   return { input, output, total: t?.total ?? input + output };
 }
 
+// A GuardContext derived purely from git (changed paths, diff hash, deletions),
+// with no token data. Shared by the hook path and the iterating `loopmd run` loop.
+export function gitDerivedContext(cwd: string, target: AgentTarget): GuardContext {
+  return {
+    target,
+    tokens: { input: 0, output: 0, total: 0 },
+    changedPaths: gitChangedPaths(cwd),
+    diffHash: gitDiffHash(cwd),
+    irreversibleActions: gitDeletions(cwd),
+  };
+}
+
 function printDecision(r: GuardResult): void {
   console.log(`guard: ${r.haltReason ? `${r.decision} (${r.haltReason})` : r.decision}`);
 }
