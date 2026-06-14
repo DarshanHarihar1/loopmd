@@ -95,11 +95,14 @@ map of subagents the loop can delegate to).
 
 ### How a Claude Code loop runs
 
-`loopmd run <name>` drives Claude Code headlessly (`claude -p`) on a **persistent session**: the
-first run creates it (`--session-id`), and every later run **resumes the same conversation**
-(`--resume`), so each iteration keeps full context. Declared `agents` are passed via `--agents`,
-and `loopmd run --dry-run` prints the exact command. A human can take over any time with
-`claude --resume <id>` (the id is printed after each run).
+`loopmd run <name>` **iterates**: each turn drives Claude Code headlessly (`claude -p`), then the
+Guard verifies/budgets/records and returns DONE / CONTINUE / HALT — repeating until done, halted,
+or the iteration ceiling (`budget.iterations`). It runs on a **persistent session**: the first
+turn creates it (`--session-id`) and every later turn **resumes the same conversation**
+(`--resume`), so context carries across turns and across nights. `--once` does a single turn + one
+Guard check; `--dry-run` prints the exact command without running it. Declared `agents` are passed
+via `--agents`, and a human can take over any time with `claude --resume <id>` (printed after each
+run).
 
 ## Commands
 
