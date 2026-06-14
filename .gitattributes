@@ -1,0 +1,3 @@
+# Keep shell scripts LF so the /bin/sh Guard fallback runs under dash/sh even when
+# checked out on Windows or with core.autocrlf=true (a CRLF guard.sh breaks dash).
+*.sh text eol=lf
