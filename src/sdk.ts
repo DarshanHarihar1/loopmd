@@ -9,6 +9,7 @@ export const SDK_VERSION = 1;
 export type {
   LoopIR,
   AgentTarget,
+  AgentDef,
   Verifier,
   Escalation,
   Budget,

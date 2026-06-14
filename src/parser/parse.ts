@@ -96,6 +96,8 @@ export function parseLoop(text: string): ParseResult {
     model: fm.model,
     context,
     notify: fm.notify,
+    ...(fm.permission_mode ? { permissionMode: fm.permission_mode } : {}),
+    ...(fm.agents ? { agents: fm.agents } : {}),
   };
 
   // 4. Validate the assembled IR.
@@ -120,6 +122,7 @@ function normalizeBudget(budget: Frontmatter["budget"]): Budget {
   if (budget.tokens !== undefined) out.tokens = budget.tokens;
   if (budget.iterations !== undefined) out.iterations = budget.iterations;
   if (budget.wall_clock !== undefined) out.wallClock = budget.wall_clock;
+  if (budget.usd !== undefined) out.usd = budget.usd;
   return out;
 }
 

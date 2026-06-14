@@ -16,7 +16,7 @@ describe the loop once, and it emits each tool's own config and wraps every run 
 ## Features
 
 - **One spec, two targets** — author once in `LOOP.md`; compile to Claude Code and/or Codex.
-- **Rides native primitives** — uses each tool's `/goal`; never re-implements an agent runtime.
+- **Rides native primitives** — uses each tool's headless mode, hooks, and scheduling; never re-implements an agent runtime.
 - **Fills only the real gaps** — generates a scheduler for Claude Code; runs the Guard as a skill step for Codex (no hooks).
 - **Safe by default** — every loop carries a token/iteration budget, a verifier, stall detection, and an escalation path.
 - **Observable** — every run emits a normalized record; `report` renders a terminal table, a shareable HTML page, or a Slack digest.
@@ -82,14 +82,24 @@ All tests in `test/` pass and lint is clean.
 
 | Section | Maps to | Run by |
 |---------|---------|--------|
-| `## Goal` / `## Stop when` | `goal` / `stopCondition` | native `/goal` |
+| `## Goal` / `## Stop when` | `goal` / `stopCondition` | the agent's prompt |
 | `## Verify with` | `verifiers[]` | the Guard |
 | `## Escalate to me if` | `escalation[]` | the Guard |
 | `## Context` | `context[]` | merged into `CLAUDE.md` / `AGENTS.md` |
 
 Verifier kinds: `run`, `exit_zero`, `custom` (pass on exit 0), `file_exists`, `http_ok` (pass on
 2xx); add `any: true` to require just one. A loop with no `budget.tokens`/`budget.iterations` is
-rejected unless you pass `--force`.
+rejected unless you pass `--force`. Optional frontmatter: `budget.usd` (a dollar ceiling →
+`--max-budget-usd`), `permission_mode` (e.g. `acceptEdits` for unattended runs), and `agents` (a
+map of subagents the loop can delegate to).
+
+### How a Claude Code loop runs
+
+`loopmd run <name>` drives Claude Code headlessly (`claude -p`) on a **persistent session**: the
+first run creates it (`--session-id`), and every later run **resumes the same conversation**
+(`--resume`), so each iteration keeps full context. Declared `agents` are passed via `--agents`,
+and `loopmd run --dry-run` prints the exact command. A human can take over any time with
+`claude --resume <id>` (the id is printed after each run).
 
 ## Commands
 
@@ -98,7 +108,7 @@ rejected unless you pass `--force`.
 | `loopmd init [file]` | Scaffold a starter `LOOP.md` (`--name`, `--agent`, `--force`). |
 | `loopmd validate [file]` | Schema + feasibility check with located diagnostics (`--force`). |
 | `loopmd build [file]` | Parse → IR → compile → emit native artifacts (`--target`, `--force`, `--dry-run`). |
-| `loopmd run <name>` | Trigger a loop now; also called by the generated scheduler (`--tokens`). |
+| `loopmd run <name>` | Trigger a loop now (resumable Claude Code session); `--budget-usd`, `--dry-run`. |
 | `loopmd guard --loop <name>` | Runtime entrypoint hooks / skill steps call (`--stdin`, `--target`, …). |
 | `loopmd report` | Brief from run records (`--since`, `--format term\|html\|slack`, `--out`). |
 | `loopmd doctor` | Environment diagnostics; exit `0` ok · `1` warnings · `2` failures. |

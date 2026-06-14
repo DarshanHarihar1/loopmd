@@ -76,7 +76,7 @@ function emitCrontab(ir: LoopIR): EmittedFile {
 function emitWorkflow(ir: LoopIR): EmittedFile {
   // Map the IR event to a real GitHub Actions trigger ("on-merge" → push to main).
   const trigger = ir.schedule.event === "on-merge" ? "push" : (ir.schedule.event ?? "push");
-  const tokenLine = ir.budget.tokens !== undefined ? ` --tokens ${ir.budget.tokens}` : "";
+  const budgetLine = ir.budget.usd !== undefined ? ` --budget-usd ${ir.budget.usd}` : "";
 
   const content = [
     `name: loopmd — ${ir.name}`,
@@ -92,7 +92,7 @@ function emitWorkflow(ir: LoopIR): EmittedFile {
     `      - uses: actions/setup-node@v4`,
     `        with:`,
     `          node-version: '20'`,
-    `      - run: npx loopmd run ${ir.name}${tokenLine}`,
+    `      - run: npx loopmd run ${ir.name}${budgetLine}`,
     `        env:`,
     `          ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}`,
     ``,
@@ -117,11 +117,4 @@ function emitLoopJson(ir: LoopIR): EmittedFile {
     path: paths.loopConfig(ir.name),
     content: JSON.stringify(ir, null, 2) + "\n",
   };
-}
-
-// Build the human-readable run command used both in the scheduler output and by `loopmd run`.
-export function buildRunCmd(ir: LoopIR): string {
-  const tokenFlag = ir.budget.tokens !== undefined ? ` --tokens ${ir.budget.tokens}` : "";
-  const isolationFlag = ir.isolation === "worktree" ? " --isolation worktree" : "";
-  return `claude -p "/goal ${ir.stopCondition}"${tokenFlag}${isolationFlag}`;
 }

@@ -23,6 +23,13 @@ export interface Budget {
   tokens?: number;
   iterations?: number;
   wallClock?: string;
+  usd?: number; // hard dollar ceiling passed to Claude Code's --max-budget-usd
+}
+
+// A subagent a loop can launch (Claude Code `--agents` / `.claude/agents`).
+export interface AgentDef {
+  description: string;
+  prompt: string;
 }
 
 export interface Schedule {
@@ -52,4 +59,6 @@ export interface LoopIR {
   model: string;
   context: string[];
   notify: Notify;
+  permissionMode?: string; // Claude Code --permission-mode for unattended runs
+  agents?: Record<string, AgentDef>; // subagents → Claude Code --agents
 }

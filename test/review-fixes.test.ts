@@ -45,10 +45,13 @@ describe("review fixes", () => {
   // `loopmd run` surfaces a missing claude binary as a non-zero exit
   describe("run launch failure", () => {
     let dir: string;
+    let home: string;
     let origPath: string | undefined;
 
     beforeEach(() => {
       dir = mkdtempSync(join(tmpdir(), "loopmd-run-"));
+      home = mkdtempSync(join(tmpdir(), "loopmd-home-"));
+      process.env.LOOPMD_HOME = home;
       mkdirSync(join(dir, "loopmd"), { recursive: true });
       writeFileSync(
         join(dir, "loopmd", "x.loop.json"),
@@ -69,7 +72,9 @@ describe("review fixes", () => {
     });
     afterEach(() => {
       process.env.PATH = origPath;
+      delete process.env.LOOPMD_HOME;
       rmSync(dir, { recursive: true, force: true });
+      rmSync(home, { recursive: true, force: true });
     });
 
     it("returns non-zero when claude cannot launch", async () => {
@@ -88,13 +93,13 @@ describe("review fixes", () => {
       }
     });
 
-    it("rejects a non-numeric --tokens", async () => {
+    it("rejects a non-numeric --budget-usd", async () => {
       const orig = process.cwd();
       process.chdir(dir);
       const realErr = console.error;
       console.error = () => {};
       try {
-        expect(await run(["x", "--tokens", "abc"])).toBe(1);
+        expect(await run(["x", "--budget-usd", "abc"])).toBe(1);
       } finally {
         console.error = realErr;
         process.chdir(orig);
