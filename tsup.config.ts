@@ -1,5 +1,5 @@
 import { defineConfig } from "tsup";
-import { copyFileSync, chmodSync, readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const pkgVersion = JSON.parse(readFileSync("package.json", "utf8")).version as string;
 
@@ -26,9 +26,11 @@ export default defineConfig({
     js: "#!/usr/bin/env node",
   },
   // Ship the /bin/sh Guard fallback next to the bundled guard.js (design §4),
-  // so it sits beside guard.js (which it execs when Node is available).
+  // so it sits beside guard.js (which it execs when Node is available). Normalize
+  // to LF + a final newline so the script always runs under dash/sh, regardless of
+  // how the source was checked out (a CRLF guard.sh breaks dash).
   onSuccess: async () => {
-    copyFileSync("scripts/guard.sh", "dist/guard.sh");
-    chmodSync("dist/guard.sh", 0o755);
+    const sh = readFileSync("scripts/guard.sh", "utf8").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    writeFileSync("dist/guard.sh", sh.endsWith("\n") ? sh : sh + "\n", { mode: 0o755 });
   },
 });
