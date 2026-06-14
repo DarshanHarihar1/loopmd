@@ -1,0 +1,71 @@
+name: Publish
+
+# Publishes loopmd to npm when a GitHub Release is published (tag like v0.0.2),
+# or on a manual dispatch. Uses npm Trusted Publishing (OIDC) when configured —
+# no token, provenance generated automatically — and falls back to NPM_TOKEN
+# otherwise. See RELEASING.md for the one-time npmjs.com setup.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+# Don't let two publishes race.
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # OIDC: trusted publishing + provenance attestation
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      # Trusted publishing + provenance need a recent npm (>= 11.5.1).
+      - name: Ensure recent npm
+        run: npm install -g npm@latest
+
+      - run: npm ci
+
+      # Full gate — never publish a red build.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      # The release tag (vX.Y.Z) must match package.json — catches a forgotten bump.
+      - name: Verify tag matches package.json version
+        if: github.event_name == 'release'
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::package.json is $PKG but the release tag is ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+
+      # Refuse to re-publish a version already on the registry.
+      - name: Verify version is unpublished
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VER is already published"
+            exit 1
+          fi
+
+      # With trusted publishing, OIDC authenticates and provenance is automatic.
+      # NODE_AUTH_TOKEN is the fallback for repos that haven't enabled it yet.
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

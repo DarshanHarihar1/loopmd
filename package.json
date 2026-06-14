@@ -2,6 +2,25 @@
   "name": "loopmd",
   "version": "0.0.0",
   "description": "Compile a declarative LOOP.md into native agent-loop wiring for Claude Code and Codex.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agent",
+    "loop",
+    "automation",
+    "ci",
+    "cli"
+  ],
+  "homepage": "https://github.com/DarshanHarihar1/loopmd#readme",
+  "bugs": {
+    "url": "https://github.com/DarshanHarihar1/loopmd/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarshanHarihar1/loopmd.git"
+  },
+  "license": "MIT",
+  "author": "Darshan Harihar",
   "type": "module",
   "bin": {
     "loopmd": "dist/cli.js"
@@ -15,6 +34,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -24,7 +46,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "format:write": "prettier --write ."
+    "format:write": "prettier --write .",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

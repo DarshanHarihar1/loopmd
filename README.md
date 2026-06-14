@@ -157,3 +157,10 @@ npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
 npm run format     # prettier --check
 ```
+
+## Releasing
+
+Publishing to npm is automated on GitHub Release via [`.github/workflows/publish.yml`](./.github/workflows/publish.yml)
+— it runs the full gate, verifies the tag matches the version, and publishes with a provenance
+attestation (npm Trusted Publishing / OIDC, with a token fallback). See [RELEASING.md](./RELEASING.md).
+
