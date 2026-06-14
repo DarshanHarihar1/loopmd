@@ -1,5 +1,5 @@
-// Run-record storage (design §3.5 #5, §3.8): append a RunRecord as one JSONL line
-// under ~/.loopmd/records/<loop>.jsonl. Path-only diffs; never logs secrets (§3.9).
+// Run-record storage: append a RunRecord as one JSONL line
+// under ~/.loopmd/records/<loop>.jsonl. Path-only diffs; never logs secrets.
 
 import { appendFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";

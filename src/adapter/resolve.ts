@@ -1,4 +1,4 @@
-// Adapter resolution (design §3.10): built-in adapters come from the registry;
+// Adapter resolution: built-in adapters come from the registry;
 // anything else is loaded from a `loopmd-adapter-<target>` package. This is the
 // on-ramp for post-v1 targets (Cursor, OpenCode, Antigravity) without core changes.
 

@@ -1,4 +1,4 @@
-// Parse the `## Verify with` section into structured Verifier[] (design §3.1, §3.2).
+// Parse the `## Verify with` section into structured Verifier[].
 //
 // Each list item is `- <kind>: <value>`, e.g.
 //   - run: npm test

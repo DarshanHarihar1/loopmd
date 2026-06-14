@@ -1,6 +1,5 @@
 dist
 node_modules
 
-# Prose docs are not code-formatted (keeps the merged design docs untouched).
+# Markdown prose is not code-formatted.
 *.md
-design

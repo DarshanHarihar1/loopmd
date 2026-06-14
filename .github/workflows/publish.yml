@@ -3,7 +3,8 @@ name: Publish
 # Publishes loopmd to npm when a GitHub Release is published (tag like v0.0.2),
 # or on a manual dispatch. Uses npm Trusted Publishing (OIDC) when configured —
 # no token, provenance generated automatically — and falls back to NPM_TOKEN
-# otherwise. See RELEASING.md for the one-time npmjs.com setup.
+# otherwise. One-time setup: add a trusted publisher (repo + this workflow file)
+# on npmjs.com, or add an NPM_TOKEN secret.
 
 on:
   release:

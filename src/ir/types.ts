@@ -1,4 +1,4 @@
-// The Loop IR: a tool-agnostic, normalized representation of a LOOP.md (design §3.2).
+// The Loop IR: a tool-agnostic, normalized representation of a LOOP.md.
 // This is the contract every adapter compiles from; it is frozen as the input
 // to Phases 2–7, so its shape is deliberately conservative.
 
@@ -23,6 +23,13 @@ export interface Budget {
   tokens?: number;
   iterations?: number;
   wallClock?: string;
+  usd?: number; // hard dollar ceiling passed to Claude Code's --max-budget-usd
+}
+
+// A subagent a loop can launch (Claude Code `--agents` / `.claude/agents`).
+export interface AgentDef {
+  description: string;
+  prompt: string;
 }
 
 export interface Schedule {
@@ -52,4 +59,6 @@ export interface LoopIR {
   model: string;
   context: string[];
   notify: Notify;
+  permissionMode?: string; // Claude Code --permission-mode for unattended runs
+  agents?: Record<string, AgentDef>; // subagents → Claude Code --agents
 }

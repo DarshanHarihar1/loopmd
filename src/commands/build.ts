@@ -1,4 +1,4 @@
-// loopmd build — parse → IR → compile → emit native Claude Code artifacts (design §3.6).
+// loopmd build — parse → IR → compile → emit native Claude Code artifacts.
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

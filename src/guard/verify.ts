@@ -1,4 +1,4 @@
-// Verifier engine (design §3.5 #1): run each Verifier and aggregate pass/fail.
+// Verifier engine: run each Verifier and aggregate pass/fail.
 // Zero-dependency — uses only Node built-ins.
 
 import { spawn } from "node:child_process";

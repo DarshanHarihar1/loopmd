@@ -1,4 +1,4 @@
-// loopmd report — render the run brief from the Guard's records (design §3.6, §3.8).
+// loopmd report — render the run brief from the Guard's records.
 // Formats: term (default), html (self-contained file), slack (Block Kit digest).
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";

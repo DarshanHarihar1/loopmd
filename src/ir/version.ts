@@ -1,4 +1,4 @@
-// IR versioning (design §3.10): LOOP.md carries a `version` for forward-compat.
+// IR versioning: LOOP.md carries a `version` for forward-compat.
 // - A file newer than this build is rejected with a clear upgrade message.
 // - Older files are migrated up to the current version via registered steps.
 

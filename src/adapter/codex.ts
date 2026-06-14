@@ -1,4 +1,4 @@
-// Codex adapter (design §3.4.2).
+// Codex adapter.
 // Capability profile: nativeGoal + nativeSchedule, but NO nativeHooks → the Guard
 // runs as a step *inside the skill* (the hook substitute), and scheduling is left to
 // Codex's native Automations (we emit a descriptor + printed registration steps).
@@ -47,7 +47,7 @@ function emitSkill(ir: LoopIR): EmittedFile {
     for (const item of ir.context) lines.push(`- ${item}`);
   }
 
-  // Codex has no Stop hooks, so the Guard runs as the final skill step (§3.4.2, §2.5).
+  // Codex has no Stop hooks, so the Guard runs as the final skill step.
   lines.push(
     "",
     "## Steps",
@@ -101,7 +101,7 @@ function emitLoopJson(ir: LoopIR): EmittedFile {
   };
 }
 
-// Automations are registered in the Codex app, so `build` prints these steps (§3.4.2).
+// Automations are registered in the Codex app, so `build` prints these steps.
 export function codexSetupInstructions(ir: LoopIR): string[] {
   return [
     `Codex: register the "${ir.name}" Automation in the Codex app:`,

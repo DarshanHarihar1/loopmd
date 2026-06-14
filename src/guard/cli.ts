@@ -84,7 +84,7 @@ function assembleContext(
     list(flagValue(argv, "--changed")) ?? payload.changedPaths ?? gitChangedPaths(cwd);
   const diffHash = flagValue(argv, "--diff-hash") ?? payload.diffHash ?? gitDiffHash(cwd);
   // Fall back to deletions detected from `git status` so the irreversible-action
-  // gate (§3.9) fires even when the caller supplies nothing. Force-push / prod-call
+  // gate fires even when the caller supplies nothing. Force-push / prod-call
   // detection has no signal at hook time and remains caller-supplied.
   const irreversibleActions =
     list(flagValue(argv, "--irreversible")) ?? payload.irreversibleActions ?? gitDeletions(cwd);
@@ -97,6 +97,18 @@ function normalizeTokens(t: StdinPayload["tokens"]): GuardContext["tokens"] {
   const input = t?.input ?? 0;
   const output = t?.output ?? 0;
   return { input, output, total: t?.total ?? input + output };
+}
+
+// A GuardContext derived purely from git (changed paths, diff hash, deletions),
+// with no token data. Shared by the hook path and the iterating `loopmd run` loop.
+export function gitDerivedContext(cwd: string, target: AgentTarget): GuardContext {
+  return {
+    target,
+    tokens: { input: 0, output: 0, total: 0 },
+    changedPaths: gitChangedPaths(cwd),
+    diffHash: gitDiffHash(cwd),
+    irreversibleActions: gitDeletions(cwd),
+  };
 }
 
 function printDecision(r: GuardResult): void {

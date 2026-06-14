@@ -1,4 +1,4 @@
-// Verifier plugin registry (design §3.10): community verifier kinds (screenshot-diff,
+// Verifier plugin registry: community verifier kinds (screenshot-diff,
 // eval-threshold, API-contract, …) register here and the Guard's verify engine runs
 // them like built-ins. Zero-dependency: a plain Map of kind → check function.
 

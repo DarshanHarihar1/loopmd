@@ -1,4 +1,4 @@
-// Stall detection (design §3.5 #3): HALT when the same diff is proposed `same_diff`
+// Stall detection: HALT when the same diff is proposed `same_diff`
 // times in a row, or a verifier fails `test_fail` times in a row. Repeat thresholds
 // come from the `escalation[].repeats` rules; counts persist in per-loop state.
 
