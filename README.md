@@ -1,22 +1,33 @@
 # loopmd
 
-A declarative `LOOP.md` file plus a compiler (`loopmd`) that turns one readable loop definition
-into the **native** agent-loop wiring for **Claude Code** and **Codex** — and a shared runtime
-**Guard** that verifies, budgets, and reports on every run.
+> One declarative `LOOP.md`, compiled into the **native** agent-loop wiring for Claude Code and Codex — with a shared runtime Guard that verifies, budgets, and reports on every run.
 
-One spec, two targets. Ride the tools' native primitives (`/goal`, Automations, hooks); fill only
-the real gaps (a scheduler for Claude Code, a skill step for Codex); and make every unattended run
-safe and observable.
+[![npm version](https://img.shields.io/npm/v/loopmd.svg)](https://www.npmjs.com/package/loopmd)
+[![CI](https://github.com/DarshanHarihar1/loopmd/actions/workflows/ci.yml/badge.svg)](https://github.com/DarshanHarihar1/loopmd/actions/workflows/ci.yml)
+[![npm downloads](https://img.shields.io/npm/dm/loopmd.svg)](https://www.npmjs.com/package/loopmd)
+[![node](https://img.shields.io/node/v/loopmd.svg)](https://www.npmjs.com/package/loopmd)
+[![license](https://img.shields.io/npm/l/loopmd.svg)](./LICENSE)
 
-See [`design/`](./design) for the technical specification and the phased plan, and
-[`docs/`](./docs) for full documentation.
+Coding agents ship loop primitives (`/goal`, scheduled runs, hooks, subagents) but wire them
+differently, with different gaps — and an unattended loop with no budget, no verifier it can't
+fool, and no record of what it did is dangerous. loopmd is a **compiler, not a wrapper**: you
+describe the loop once, and it emits each tool's own config and wraps every run in a safety Guard.
+
+## Features
+
+- **One spec, two targets** — author once in `LOOP.md`; compile to Claude Code and/or Codex.
+- **Rides native primitives** — uses each tool's `/goal`; never re-implements an agent runtime.
+- **Fills only the real gaps** — generates a scheduler for Claude Code; runs the Guard as a skill step for Codex (no hooks).
+- **Safe by default** — every loop carries a token/iteration budget, a verifier, stall detection, and an escalation path.
+- **Observable** — every run emits a normalized record; `report` renders a terminal table, a shareable HTML page, or a Slack digest.
+- **Extensible** — external adapters (`loopmd-adapter-*`) and verifiers (`loopmd-verifier-*`) plug in through a versioned SDK.
+- **Local-first** — generated artifacts are committed plaintext; nothing leaves your machine.
 
 ## Install
 
 ```sh
-npm i -g loopmd        # global CLI
-# or, zero-install:
-npx loopmd <command>
+npm i -g loopmd      # global CLI
+npx loopmd <cmd>     # or zero-install
 ```
 
 Requires Node 20+.
@@ -24,7 +35,7 @@ Requires Node 20+.
 ## Quick start
 
 ```sh
-loopmd init                              # scaffold a starter ./LOOP.md
+loopmd init                              # scaffold a starter LOOP.md
 loopmd validate                          # schema + feasibility check
 loopmd build                             # compile to native artifacts
 loopmd report --format html --out brief.html
@@ -34,8 +45,7 @@ loopmd doctor                            # environment diagnostics
 ## `LOOP.md`
 
 The single file you edit; everything else is generated and disposable. YAML frontmatter (machine
-fields) plus five markdown sections — `## Goal`, `## Stop when`, `## Verify with`,
-`## Escalate to me if`, and an optional `## Context`.
+fields) plus markdown sections (human intent).
 
 ```markdown
 ---
@@ -65,11 +75,21 @@ All tests in `test/` pass and lint is clean.
 ## Escalate to me if
 - touches: ["auth/**", "billing/**"]
 - repeats: { test_fail: 3 }
+
+## Context
+- We use pnpm; npm is aliased.
 ```
 
-A loop with no `budget.tokens` or `budget.iterations` is rejected by `validate`/`build` unless
-`--force` — every emitted loop must carry a budget ceiling. See
-[docs/authoring-loop-md.md](./docs/authoring-loop-md.md).
+| Section | Maps to | Run by |
+|---------|---------|--------|
+| `## Goal` / `## Stop when` | `goal` / `stopCondition` | native `/goal` |
+| `## Verify with` | `verifiers[]` | the Guard |
+| `## Escalate to me if` | `escalation[]` | the Guard |
+| `## Context` | `context[]` | merged into `CLAUDE.md` / `AGENTS.md` |
+
+Verifier kinds: `run`, `exit_zero`, `custom` (pass on exit 0), `file_exists`, `http_ok` (pass on
+2xx); add `any: true` to require just one. A loop with no `budget.tokens`/`budget.iterations` is
+rejected unless you pass `--force`.
 
 ## Commands
 
@@ -83,15 +103,12 @@ A loop with no `budget.tokens` or `budget.iterations` is rejected by `validate`/
 | `loopmd report` | Brief from run records (`--since`, `--format term\|html\|slack`, `--out`). |
 | `loopmd doctor` | Environment diagnostics; exit `0` ok · `1` warnings · `2` failures. |
 
-Most commands exit `0` on success and `1` on a usage/validation error.
-
 ## What `build` emits
 
-`build` compiles `LOOP.md` into each target's native artifacts, idempotently, printing a plan
-before writing and detecting drift via `loopmd/generated.lock`:
+`build` is idempotent, prints a plan before writing, and detects drift via `loopmd/generated.lock`:
 
-- **Claude Code** — a command, a Stop hook that calls the Guard, a generated scheduler
-  (crontab fragment, or a GitHub Actions workflow for `on-merge`), and a `CLAUDE.md` context block.
+- **Claude Code** — a command, a Stop hook that calls the Guard, a generated scheduler (crontab
+  fragment, or a GitHub Actions workflow for `on-merge`), and a `CLAUDE.md` context block.
 - **Codex** — a skill ending in a `loopmd guard` step (Codex has no hooks), a
   `*.codex-automation.json` descriptor (registered in-app) with printed setup steps, and an
   `AGENTS.md` context block.
@@ -102,66 +119,63 @@ Context is merged into `CLAUDE.md` / `AGENTS.md` inside a managed block
 
 ## The Guard
 
-The Guard is the one component loopmd owns end-to-end, **identical across targets** (design §3.5).
-On Claude Code it runs as a Stop hook; on Codex as the final skill step. Each invocation it runs
-the `verifiers` (aggregating pass/fail, honoring `any`), enforces the token/iteration `budget`,
-detects stalls (same diff or repeated verifier failures), escalates when a changed path matches an
-`escalation.touches` glob or an irreversible action is detected, appends a normalized `RunRecord`
-(JSONL), and returns `DONE` / `CONTINUE` / `HALT`. Decision order is safety-first:
-**escalate > budget > stall > verify**.
+The Guard is the one component loopmd owns end-to-end, **identical across targets**. On Claude Code
+it runs as a Stop hook; on Codex as the final skill step. Each invocation it runs the `verifiers`,
+enforces the `budget`, detects stalls (same diff or repeated verifier failures), escalates when a
+changed path matches `escalation.touches` or an irreversible action (e.g. a deletion) is detected,
+appends a normalized `RunRecord` (JSONL), and returns `DONE` / `CONTINUE` / `HALT`. Decision order
+is safety-first: **escalate > budget > stall > verify**.
 
-Records and per-loop state live under `~/.loopmd/` (override with `LOOPMD_HOME`). The Guard ships
-as a single self-contained `guard.js`, plus a `/bin/sh` fallback (`guard.sh`) for hook contexts
-without Node. Exit codes: `0` done/continue · `1` halt · `2` error. See
-[docs/guard.md](./docs/guard.md).
+Records and per-loop state live under `~/.loopmd/` (override with `LOOPMD_HOME`). The Guard ships as
+a single zero-dependency `guard.js`, plus a `/bin/sh` fallback for hook contexts without Node.
 
 ## Reporting
 
-`report` reads the Guard's records (the universal source, independent of native telemetry), lists
-escalated / needs-human runs first, and totals tokens and cost. When Claude Code session JSONL is
-present it adds per-skill token attribution. `--format html` writes a self-contained shareable
-page; `--format slack` emits a Block Kit digest (channel from `notify.channel`); `--out <file>`
-writes to a file instead of stdout; `--since` accepts windows like `24h` / `7d`.
+`report` reads the Guard's records (the universal source), lists escalated / needs-human runs
+first, and totals tokens and cost. `--format html` writes a self-contained shareable page;
+`--format slack` emits a Block Kit digest (channel from `notify.channel`); `--out <file>` writes to
+a file; `--since` accepts windows like `24h` / `7d`.
 
-## Extending loopmd
+## Extending
 
-External adapters and verifiers plug in through a stable, versioned SDK (`loopmd/sdk`):
-
-- **Adapters** — published as `loopmd-adapter-<target>` packages; resolved by `getAdapter`. The
-  on-ramp for new tools. See [docs/writing-an-adapter.md](./docs/writing-an-adapter.md).
-- **Verifiers** — `registerVerifier(kind, fn)` adds new check kinds the Guard runs like built-ins.
-  See [docs/writing-a-verifier.md](./docs/writing-a-verifier.md).
-- **Synthesized Runner** — `runLoop(...)` drives a tool without native `/goal` under the Guard.
+External adapters and verifiers plug in through the published, versioned SDK (`loopmd/sdk`):
 
 ```ts
 import { getAdapter, registerVerifier, runLoop, SDK_VERSION } from "loopmd/sdk";
+
+// A new check kind the Guard runs like a built-in:
+registerVerifier("eval-threshold", async (v, cwd) => (await runEval(cwd)) >= 0.9);
 ```
 
-The IR is versioned (`version` in `LOOP.md`): files authored for a newer loopmd are rejected with
-an upgrade message; older files migrate forward. See [docs/ir-versioning.md](./docs/ir-versioning.md).
+- **Adapters** — `loopmd-adapter-<target>` packages, resolved by `getAdapter`. For tools without
+  native `/goal`, `runLoop(...)` drives them one turn at a time under the Guard.
+- **Verifiers** — `registerVerifier(kind, fn)` adds new check kinds.
+- **IR versioning** — `LOOP.md` carries `version`; files authored for a newer loopmd are rejected
+  with an upgrade message, and older files migrate forward.
 
 ## Security
 
-The compiler writes code that executes (hooks, cron, skill steps), so: least privilege, no
-credential capture (records are path-only by default), irreversible actions escalate rather than
-run silently, output is reviewable plaintext with drift detection, and a budget ceiling is
-mandatory. See [docs/security.md](./docs/security.md).
+The compiler writes code that executes (hooks, cron, skill steps), so: least privilege; no
+credential capture (records are path-only by default); irreversible actions escalate rather than
+run silently; output is reviewable plaintext with drift detection; and a budget ceiling is
+mandatory.
 
 ## Development
 
 ```sh
 npm install
 npm run build      # bundle the CLI + standalone Guard + SDK (tsup)
-npm test           # run the test suite (vitest)
+npm test           # vitest
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
 npm run format     # prettier --check
 ```
 
-## Releasing
+Publishing is automated on GitHub Release via
+[`.github/workflows/publish.yml`](./.github/workflows/publish.yml) — it runs the full gate, verifies
+the tag matches the version, and publishes with a provenance attestation. Cut a release with
+`npm version patch`, push the tag, and publish a GitHub Release for it.
 
-Publishing to npm is automated on GitHub Release via [`.github/workflows/publish.yml`](./.github/workflows/publish.yml)
-— it runs the full gate, verifies the tag matches the version, and publishes with a provenance
-attestation (npm Trusted Publishing / OIDC, with a token fallback). Cut a release by bumping the
-version (`npm version patch`), pushing the tag, and publishing a GitHub Release for it.
+## License
 
+[MIT](./LICENSE)
